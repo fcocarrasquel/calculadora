@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Precios - IVA y Margen</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .calculator {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .calculator {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section, .results-section {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+        
+        .breakdown {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .breakdown-label {
+            font-weight: 500;
+        }
+        
+        .breakdown-value {
+            font-weight: 600;
+        }
+        
+        .margins-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .margins-table th, .margins-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .margins-table th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .margins-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .margins-table tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .highlight {
+            background-color: #fff3cd !important;
+            font-weight: 600;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--dark);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .info-box {
+            background: #e8f4fd;
+            border-left: 4px solid var(--secondary);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Precios con IVA y Margen</h1>
+            <p class="description">Calcula fácilmente tus precios de venta considerando IVA (19%) y diferentes márgenes de ganancia sobre el precio con IVA</p>
+        </header>
+        
+        <div class="calculator">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="basePrice">Precio Base (sin IVA)</label>
+                    <input type="number" id="basePrice" placeholder="Ej: 2000" value="2000" min="0" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label for="margin">Margen de Ganancia (sobre precio con IVA)</label>
+                    <select id="margin">
+                        <option value="0.10">10% (Bajo - Alta rotación)</option>
+                        <option value="0.15">15% (Moderado - Productos básicos)</option>
+                        <option value="0.20" selected>20% (Estándar - Equilibrado)</option>
+                        <option value="0.25">25% (Buen margen)</option>
+                        <option value="0.30">30% (Alto - Productos especializados)</option>
+                        <option value="0.35">35% (Muy alto)</option>
+                        <option value="0.40">40% (Premium)</option>
+                        <option value="0.4286">42.86% (Máximo - Productos exclusivos)</option>
+                    </select>
+                </div>
+                
+                <button id="calculateBtn">Calcular Precio</button>
+                
+                <div class="info-box">
+                    <div class="info-title">¿Cómo funciona?</div>
+                    <p>Esta calculadora aplica primero el IVA (19%) a tu precio base, y luego añade el margen de ganancia seleccionado sobre ese precio con IVA.</p>
+                    <p><strong>Fórmula:</strong> Precio Final = Precio Base × 1.19 × (1 + Margen)</p>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <div class="result-card">
+                    <div class="result-title">Precio Final (al público)</div>
+                    <div class="result-value" id="finalPrice">$2,856.00</div>
+                    
+                    <div class="breakdown">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Precio Base:</span>
+                            <span class="breakdown-value" id="basePriceResult">$2,000.00</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">IVA (19%):</span>
+                            <span class="breakdown-value" id="ivaAmount">$380.00</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Precio con IVA:</span>
+                            <span class="breakdown-value" id="priceWithVAT">$2,380.00</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Ganancia Bruta:</span>
+                            <span class="breakdown-value" id="grossProfit">$476.00</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Rentabilidad (sobre base):</span>
+                            <span class="breakdown-value" id="profitability">23.8%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Comparación de Márgenes</h3>
+                <table class="margins-table">
+                    <thead>
+                        <tr>
+                            <th>Margen</th>
+                            <th>Precio Final</th>
+                            <th>Ganancia Bruta</th>
+                            <th>Rentabilidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marginsTableBody">
+                        <!-- Los datos se llenarán con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Calculadora de Precios con IVA y Margen de Ganancia &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const basePriceInput = document.getElementById('basePrice');
+            const marginSelect = document.getElementById('margin');
+            const calculateBtn = document.getElementById('calculateBtn');
+            
+            const finalPriceElement = document.getElementById('finalPrice');
+            const basePriceResultElement = document.getElementById('basePriceResult');
+            const ivaAmountElement = document.getElementById('ivaAmount');
+            const priceWithVATElement = document.getElementById('priceWithVAT');
+            const grossProfitElement = document.getElementById('grossProfit');
+            const profitabilityElement = document.getElementById('profitability');
+            const marginsTableBody = document.getElementById('marginsTableBody');
+            
+            // Calcular al cargar la página
+            calculatePrices();
+            
+            // Calcular cuando se cambian los valores
+            basePriceInput.addEventListener('input', calculatePrices);
+            marginSelect.addEventListener('change', calculatePrices);
+            calculateBtn.addEventListener('click', calculatePrices);
+            
+            function calculatePrices() {
+                const basePrice = parseFloat(basePriceInput.value) || 0;
+                const selectedMargin = parseFloat(marginSelect.value);
+                
+                // Calcular precio con IVA
+                const priceWithVAT = basePrice * 1.19;
+                
+                // Calcular precio final con margen
+                const finalPrice = priceWithVAT * (1 + selectedMargin);
+                
+                // Calcular ganancia bruta
+                const grossProfit = finalPrice - priceWithVAT;
+                
+                // Calcular rentabilidad sobre base
+                const profitability = (grossProfit / basePrice) * 100;
+                
+                // Mostrar resultados
+                finalPriceElement.textContent = formatCurrency(finalPrice);
+                basePriceResultElement.textContent = formatCurrency(basePrice);
+                ivaAmountElement.textContent = formatCurrency(priceWithVAT - basePrice);
+                priceWithVATElement.textContent = formatCurrency(priceWithVAT);
+                grossProfitElement.textContent = formatCurrency(grossProfit);
+                profitabilityElement.textContent = profitability.toFixed(1) + '%';
+                
+                // Actualizar tabla de márgenes
+                updateMarginsTable(basePrice, selectedMargin);
+            }
+            
+            function updateMarginsTable(basePrice, selectedMargin) {
+                const margins = [
+                    { value: 0.10, label: '10%' },
+                    { value: 0.15, label: '15%' },
+                    { value: 0.20, label: '20%' },
+                    { value: 0.25, label: '25%' },
+                    { value: 0.30, label: '30%' },
+                    { value: 0.35, label: '35%' },
+                    { value: 0.40, label: '40%' },
+                    { value: 0.4286, label: '42.86%' }
+                ];
+                
+                let tableHTML = '';
+                
+                margins.forEach(margin => {
+                    const priceWithVAT = basePrice * 1.19;
+                    const finalPrice = priceWithVAT * (1 + margin.value);
+                    const grossProfit = finalPrice - priceWithVAT;
+                    const profitability = (grossProfit / basePrice) * 100;
+                    
+                    const isSelected = Math.abs(margin.value - selectedMargin) < 0.001;
+                    const rowClass = isSelected ? 'highlight' : '';
+                    
+                    tableHTML += `
+                        <tr class="${rowClass}">
+                            <td>${margin.label}</td>
+                            <td>${formatCurrency(finalPrice)}</td>
+                            <td>${formatCurrency(grossProfit)}</td>
+                            <td>${profitability.toFixed(1)}%</td>
+                        </tr>
+                    `;
+                });
+                
+                marginsTableBody.innerHTML = tableHTML;
+            }
+            
+            function formatCurrency(amount) {
+                return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+            }
+        });
+    </script>
+</body>
+</html>
