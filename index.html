@@ -51,6 +51,34 @@
             font-size: 1.5rem;
         }
 
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 10px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .tab.active {
+            border-bottom: 3px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .calculator {
             padding: 15px;
         }
@@ -105,7 +133,7 @@
             min-width: 0;
         }
 
-        #ivaManualGroup {
+        #ivaManualGroup, #pIvaManualGroup {
             margin-top: 10px;
         }
 
@@ -128,6 +156,15 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--success);
+            margin-bottom: 10px;
+        }
+
+        .formula {
+            font-size: 0.85rem;
+            color: var(--dark);
+            background: #eef4f8;
+            border-radius: 6px;
+            padding: 8px 10px;
             margin-bottom: 10px;
         }
 
@@ -244,97 +281,207 @@
             <h1>Calculadora de Precios de Costos</h1>
         </header>
 
-        <div class="calculator">
-            <div class="input-section">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="costWithoutVAT">Costo sin IVA</label>
-                        <input type="number" id="costWithoutVAT" placeholder="Ej: 2000" value="2000" min="0" step="0.01">
-                    </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="costos">Costos sin IVA</div>
+            <div class="tab" data-tab="premium">Costos Premium</div>
+        </div>
 
-                    <div class="form-group">
-                        <label for="ivaSelect">IVA</label>
-                        <select id="ivaSelect">
-                            <option value="0">0% — Exento</option>
-                            <option value="7">7%</option>
-                            <option value="10">10%</option>
-                            <option value="12">12%</option>
-                            <option value="13">13%</option>
-                            <option value="15">15%</option>
-                            <option value="16">16%</option>
-                            <option value="18">18%</option>
-                            <option value="19" selected>19%</option>
-                            <option value="21">21%</option>
-                            <option value="22">22%</option>
-                            <option value="27">27%</option>
-                            <option value="manual">Otro (manual)…</option>
-                        </select>
-                        <div id="ivaManualGroup" style="display: none;">
-                            <label for="ivaManual">IVA manual (%)</label>
-                            <input type="number" id="ivaManual" placeholder="Ej: 19" value="19" min="0" step="0.1">
+        <div class="calculator">
+            <!-- PESTAÑA 1: COSTOS SIN IVA (la de siempre, sin cambios en su lógica) -->
+            <div class="tab-content active" id="costos-tab">
+                <div class="input-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="costWithoutVAT">Costo sin IVA</label>
+                            <input type="number" id="costWithoutVAT" placeholder="Ej: 2000" value="2000" min="0" step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ivaSelect">IVA</label>
+                            <select id="ivaSelect">
+                                <option value="0">0% — Exento</option>
+                                <option value="7">7%</option>
+                                <option value="10">10%</option>
+                                <option value="12">12%</option>
+                                <option value="13">13%</option>
+                                <option value="15">15%</option>
+                                <option value="16">16%</option>
+                                <option value="18">18%</option>
+                                <option value="19" selected>19%</option>
+                                <option value="21">21%</option>
+                                <option value="22">22%</option>
+                                <option value="27">27%</option>
+                                <option value="manual">Otro (manual)…</option>
+                            </select>
+                            <div id="ivaManualGroup" style="display: none;">
+                                <label for="ivaManual">IVA manual (%)</label>
+                                <input type="number" id="ivaManual" placeholder="Ej: 19" value="19" min="0" step="0.1">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="margin">Margen de Ganancia</label>
+                            <select id="margin">
+                                <option value="0.10">10% (Bajo)</option>
+                                <option value="0.15">15% (Moderado)</option>
+                                <option value="0.20" selected>20% (Estándar)</option>
+                                <option value="0.25">25% (Buen margen)</option>
+                                <option value="0.30">30% (Alto)</option>
+                                <option value="0.35">35% (Muy alto)</option>
+                                <option value="0.40">40% (Premium)</option>
+                                <option value="0.4286">42.86% (Máximo)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-section">
+                    <div class="result-card">
+                        <div class="result-title">Precio Final (al público)</div>
+                        <div class="result-value" id="finalPrice">$2.856</div>
+                        <div class="formula">Fórmula: Precio con IVA × (1 + Margen) — el margen se suma encima del costo.</div>
+
+                        <div class="breakdown">
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Costo sin IVA:</span>
+                                <span class="breakdown-value" id="basePriceResult">$2.000</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label" id="ivaLabel">IVA (19%):</span>
+                                <span class="breakdown-value" id="ivaAmount">$380</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Precio con IVA:</span>
+                                <span class="breakdown-value" id="priceWithVATResult">$2.380</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Ganancia Bruta:</span>
+                                <span class="breakdown-value" id="grossProfit">$476</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Rentabilidad:</span>
+                                <span class="breakdown-value" id="profitability">23.8%</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="margin">Margen de Ganancia</label>
-                        <select id="margin">
-                            <option value="0.10">10% (Bajo)</option>
-                            <option value="0.15">15% (Moderado)</option>
-                            <option value="0.20" selected>20% (Estándar)</option>
-                            <option value="0.25">25% (Buen margen)</option>
-                            <option value="0.30">30% (Alto)</option>
-                            <option value="0.35">35% (Muy alto)</option>
-                            <option value="0.40">40% (Premium)</option>
-                            <option value="0.4286">42.86% (Máximo)</option>
-                        </select>
+                    <h3>Comparación de Márgenes</h3>
+                    <div class="margins-table-container">
+                        <table class="margins-table">
+                            <thead>
+                                <tr>
+                                    <th>Margen</th>
+                                    <th>Precio Final</th>
+                                    <th>Ganancia</th>
+                                    <th>Rentab.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="marginsTableBody">
+                                <!-- Los datos se llenarán con JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div class="results-section">
-                <div class="result-card">
-                    <div class="result-title">Precio Final (al público)</div>
-                    <div class="result-value" id="finalPrice">$2.856</div>
+            <!-- PESTAÑA 2: COSTOS PREMIUM (margen sobre la venta: se divide) -->
+            <div class="tab-content" id="premium-tab">
+                <div class="input-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pCost">Costo sin IVA</label>
+                            <input type="number" id="pCost" placeholder="Ej: 2000" value="2000" min="0" step="0.01">
+                        </div>
 
-                    <div class="breakdown">
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Costo sin IVA:</span>
-                            <span class="breakdown-value" id="basePriceResult">$2.000</span>
+                        <div class="form-group">
+                            <label for="pIvaSelect">IVA</label>
+                            <select id="pIvaSelect">
+                                <option value="0">0% — Exento</option>
+                                <option value="7">7%</option>
+                                <option value="10">10%</option>
+                                <option value="12">12%</option>
+                                <option value="13">13%</option>
+                                <option value="15">15%</option>
+                                <option value="16">16%</option>
+                                <option value="18">18%</option>
+                                <option value="19" selected>19%</option>
+                                <option value="21">21%</option>
+                                <option value="22">22%</option>
+                                <option value="27">27%</option>
+                                <option value="manual">Otro (manual)…</option>
+                            </select>
+                            <div id="pIvaManualGroup" style="display: none;">
+                                <label for="pIvaManual">IVA manual (%)</label>
+                                <input type="number" id="pIvaManual" placeholder="Ej: 19" value="19" min="0" step="0.1">
+                            </div>
                         </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label" id="ivaLabel">IVA (19%):</span>
-                            <span class="breakdown-value" id="ivaAmount">$380</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Precio con IVA:</span>
-                            <span class="breakdown-value" id="priceWithVATResult">$2.380</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Ganancia Bruta:</span>
-                            <span class="breakdown-value" id="grossProfit">$476</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Rentabilidad:</span>
-                            <span class="breakdown-value" id="profitability">23.8%</span>
+
+                        <div class="form-group">
+                            <label for="pMargin">Margen sobre la Venta</label>
+                            <select id="pMargin">
+                                <option value="0.10">10%</option>
+                                <option value="0.15">15%</option>
+                                <option value="0.20" selected>20%</option>
+                                <option value="0.25">25%</option>
+                                <option value="0.30">30%</option>
+                                <option value="0.35">35%</option>
+                                <option value="0.40">40%</option>
+                                <option value="0.50">50% (Máximo)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <h3>Comparación de Márgenes</h3>
-                <div class="margins-table-container">
-                    <table class="margins-table">
-                        <thead>
-                            <tr>
-                                <th>Margen</th>
-                                <th>Precio Final</th>
-                                <th>Ganancia</th>
-                                <th>Rentab.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="marginsTableBody">
-                            <!-- Los datos se llenarán con JavaScript -->
-                        </tbody>
-                    </table>
+                <div class="results-section">
+                    <div class="result-card">
+                        <div class="result-title">Precio Final (al público)</div>
+                        <div class="result-value" id="pFinalPrice">$2.975</div>
+                        <div class="formula">Fórmula: Precio con IVA ÷ (1 − Margen) — el margen es de lo que cobras.</div>
+
+                        <div class="breakdown">
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Costo sin IVA:</span>
+                                <span class="breakdown-value" id="pBasePrice">$2.000</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label" id="pIvaLabel">IVA (19%):</span>
+                                <span class="breakdown-value" id="pIvaAmount">$380</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Precio con IVA:</span>
+                                <span class="breakdown-value" id="pBrutoPrice">$2.380</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Operación:</span>
+                                <span class="breakdown-value" id="pOperation">$2.380 ÷ 0.80</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Ganancia Neta:</span>
+                                <span class="breakdown-value" id="pNetProfit">$500</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Rentabilidad (Markup):</span>
+                                <span class="breakdown-value" id="pMarkup">25.0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Comparación de Márgenes sobre la Venta</h3>
+                    <div class="margins-table-container">
+                        <table class="margins-table">
+                            <thead>
+                                <tr>
+                                    <th>Margen</th>
+                                    <th>Precio Final</th>
+                                    <th>Ganancia Neta</th>
+                                    <th>Rentab.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pMarginsTableBody">
+                                <!-- Los datos se llenarán con JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -346,6 +493,33 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ---------- Utilidades ----------
+            function formatRate(rate) {
+                return parseFloat(rate.toFixed(1)).toString();
+            }
+
+            // Formato chileno: $2.856, sin decimales
+            function formatCurrency(amount) {
+                return '$' + Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            // ---------- Pestañas ----------
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+
+            // ---------- PESTAÑA 1: COSTOS SIN IVA (multiplica: Precio con IVA x (1 + Margen)) ----------
             const costInput = document.getElementById('costWithoutVAT');
             const ivaSelect = document.getElementById('ivaSelect');
             const ivaManualInput = document.getElementById('ivaManual');
@@ -370,10 +544,6 @@
                     return rate;
                 }
                 return parseFloat(ivaSelect.value);
-            }
-
-            function formatRate(rate) {
-                return parseFloat(rate.toFixed(1)).toString();
             }
 
             function calculatePrices() {
@@ -444,11 +614,6 @@
                 marginsTableBody.innerHTML = tableHTML;
             }
 
-            // Formato chileno: $2.856, sin decimales
-            function formatCurrency(amount) {
-                return '$' + Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            }
-
             // Mostrar u ocultar el campo manual según la selección
             ivaSelect.addEventListener('change', function() {
                 if (ivaSelect.value === 'manual') {
@@ -465,6 +630,123 @@
 
             // Calcular al cargar la página
             calculatePrices();
+
+            // ---------- PESTAÑA 2: COSTOS PREMIUM (divide: Precio con IVA / (1 - Margen)) ----------
+            const pCostInput = document.getElementById('pCost');
+            const pIvaSelect = document.getElementById('pIvaSelect');
+            const pIvaManualInput = document.getElementById('pIvaManual');
+            const pIvaManualGroup = document.getElementById('pIvaManualGroup');
+            const pMarginSelect = document.getElementById('pMargin');
+
+            const pFinalPriceElement = document.getElementById('pFinalPrice');
+            const pBasePriceElement = document.getElementById('pBasePrice');
+            const pIvaLabelElement = document.getElementById('pIvaLabel');
+            const pIvaAmountElement = document.getElementById('pIvaAmount');
+            const pBrutoPriceElement = document.getElementById('pBrutoPrice');
+            const pOperationElement = document.getElementById('pOperation');
+            const pNetProfitElement = document.getElementById('pNetProfit');
+            const pMarkupElement = document.getElementById('pMarkup');
+            const pMarginsTableBody = document.getElementById('pMarginsTableBody');
+
+            // IVA vigente en Premium: igual que en la normal (lista o manual sin tope)
+            function getPIvaRate() {
+                if (pIvaSelect.value === 'manual') {
+                    let rate = parseFloat(pIvaManualInput.value);
+                    if (isNaN(rate)) rate = 0;
+                    if (rate < 0) rate = 0;
+                    return rate;
+                }
+                return parseFloat(pIvaSelect.value);
+            }
+
+            function calculatePremium() {
+                const basePrice = parseFloat(pCostInput.value) || 0;
+                const ivaRate = getPIvaRate();
+                const factor = 1 + ivaRate / 100;
+
+                // Costo sin IVA x (1 + IVA) = precio con IVA (bruto)
+                const priceWithVAT = basePrice * factor;
+                const ivaAmount = priceWithVAT - basePrice;
+
+                const selectedMargin = parseFloat(pMarginSelect.value);
+                const divisor = 1 - selectedMargin;
+
+                // Precio final: Precio con IVA / (1 - Margen)
+                const finalPrice = divisor > 0 ? priceWithVAT / divisor : 0;
+
+                // Ganancia neta: Precio Final / (1 + IVA) - Costo sin IVA
+                const netProfit = finalPrice / factor - basePrice;
+
+                // Rentabilidad / Markup sobre el costo sin IVA
+                const markup = basePrice > 0 ? (netProfit / basePrice) * 100 : 0;
+
+                // Mostrar resultados
+                pFinalPriceElement.textContent = formatCurrency(finalPrice);
+                pBasePriceElement.textContent = formatCurrency(basePrice);
+                pIvaLabelElement.textContent = 'IVA (' + formatRate(ivaRate) + '%):';
+                pIvaAmountElement.textContent = formatCurrency(ivaAmount);
+                pBrutoPriceElement.textContent = formatCurrency(priceWithVAT);
+                pOperationElement.textContent = formatCurrency(priceWithVAT) + ' ÷ ' + divisor.toFixed(2);
+                pNetProfitElement.textContent = formatCurrency(netProfit);
+                pMarkupElement.textContent = markup.toFixed(1) + '%';
+
+                // Actualizar tabla de márgenes sobre la venta
+                updatePremiumTable(basePrice, factor, selectedMargin);
+            }
+
+            function updatePremiumTable(basePrice, factor, selectedMargin) {
+                const margins = [
+                    { value: 0.10, label: '10%' },
+                    { value: 0.15, label: '15%' },
+                    { value: 0.20, label: '20%' },
+                    { value: 0.25, label: '25%' },
+                    { value: 0.30, label: '30%' },
+                    { value: 0.35, label: '35%' },
+                    { value: 0.40, label: '40%' },
+                    { value: 0.50, label: '50%' }
+                ];
+
+                const priceWithVAT = basePrice * factor;
+                let tableHTML = '';
+
+                margins.forEach(margin => {
+                    const divisor = 1 - margin.value;
+                    const finalPrice = divisor > 0 ? priceWithVAT / divisor : 0;
+                    const netProfit = finalPrice / factor - basePrice;
+                    const markup = basePrice > 0 ? (netProfit / basePrice) * 100 : 0;
+
+                    const isSelected = Math.abs(margin.value - selectedMargin) < 0.001;
+                    const rowClass = isSelected ? 'highlight' : '';
+
+                    tableHTML += `
+                        <tr class="${rowClass}">
+                            <td>${margin.label}</td>
+                            <td>${formatCurrency(finalPrice)}</td>
+                            <td>${formatCurrency(netProfit)}</td>
+                            <td>${markup.toFixed(1)}%</td>
+                        </tr>
+                    `;
+                });
+
+                pMarginsTableBody.innerHTML = tableHTML;
+            }
+
+            // Mostrar u ocultar el campo manual según la selección
+            pIvaSelect.addEventListener('change', function() {
+                if (pIvaSelect.value === 'manual') {
+                    pIvaManualGroup.style.display = 'block';
+                } else {
+                    pIvaManualGroup.style.display = 'none';
+                }
+                calculatePremium();
+            });
+
+            pCostInput.addEventListener('input', calculatePremium);
+            pIvaManualInput.addEventListener('input', calculatePremium);
+            pMarginSelect.addEventListener('change', calculatePremium);
+
+            // Calcular al cargar la página
+            calculatePremium();
         });
     </script>
 </body>
