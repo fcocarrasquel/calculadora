@@ -355,8 +355,8 @@
                                 <span class="breakdown-value" id="priceWithVATResult">$2.380</span>
                             </div>
                             <div class="breakdown-item">
-                                <span class="breakdown-label">Ganancia Bruta:</span>
-                                <span class="breakdown-value" id="grossProfit">$476</span>
+                                <span class="breakdown-label">Ganancia Neta:</span>
+                                <span class="breakdown-value" id="netProfit">$400</span>
                             </div>
                             <div class="breakdown-item">
                                 <span class="breakdown-label">Rentabilidad:</span>
@@ -372,7 +372,7 @@
                                 <tr>
                                     <th>Margen</th>
                                     <th>Precio Final</th>
-                                    <th>Ganancia</th>
+                                    <th>Ganancia Neta</th>
                                     <th>Rentab.</th>
                                 </tr>
                             </thead>
@@ -527,7 +527,7 @@
             const ivaLabelElement = document.getElementById('ivaLabel');
             const ivaAmountElement = document.getElementById('ivaAmount');
             const priceWithVATResultElement = document.getElementById('priceWithVATResult');
-            const grossProfitElement = document.getElementById('grossProfit');
+            const netProfitElement = document.getElementById('netProfit');
             const profitabilityElement = document.getElementById('profitability');
             const marginsTableBody = document.getElementById('marginsTableBody');
 
@@ -556,11 +556,11 @@
                 // Precio final con margen (fórmula original, sin cambios)
                 const finalPrice = priceWithVAT * (1 + selectedMargin);
 
-                // Ganancia bruta
-                const grossProfit = finalPrice - priceWithVAT;
+                // Ganancia neta real: lo que queda después de sacar el IVA (el IVA no es ganancia)
+                const netProfit = finalPrice / factor - basePrice;
 
-                // Rentabilidad sobre el costo sin IVA
-                const profitability = basePrice > 0 ? (grossProfit / basePrice) * 100 : 0;
+                // Rentabilidad real sobre el costo sin IVA
+                const profitability = basePrice > 0 ? (netProfit / basePrice) * 100 : 0;
 
                 // Mostrar resultados
                 finalPriceElement.textContent = formatCurrency(finalPrice);
@@ -568,14 +568,14 @@
                 ivaLabelElement.textContent = 'IVA (' + formatRate(ivaRate) + '%):';
                 ivaAmountElement.textContent = formatCurrency(ivaAmount);
                 priceWithVATResultElement.textContent = formatCurrency(priceWithVAT);
-                grossProfitElement.textContent = formatCurrency(grossProfit);
+                netProfitElement.textContent = formatCurrency(netProfit);
                 profitabilityElement.textContent = profitability.toFixed(1) + '%';
 
                 // Actualizar tabla de márgenes
-                updateMarginsTable(basePrice, priceWithVAT, selectedMargin);
+                updateMarginsTable(basePrice, priceWithVAT, selectedMargin, factor);
             }
 
-            function updateMarginsTable(basePrice, priceWithVAT, selectedMargin) {
+            function updateMarginsTable(basePrice, priceWithVAT, selectedMargin, factor) {
                 const margins = [
                     { value: 0.10, label: '10%' },
                     { value: 0.15, label: '15%' },
@@ -591,8 +591,8 @@
 
                 margins.forEach(margin => {
                     const finalPrice = priceWithVAT * (1 + margin.value);
-                    const grossProfit = finalPrice - priceWithVAT;
-                    const profitability = basePrice > 0 ? (grossProfit / basePrice) * 100 : 0;
+                    const netProfit = finalPrice / factor - basePrice;
+                    const profitability = basePrice > 0 ? (netProfit / basePrice) * 100 : 0;
 
                     const isSelected = Math.abs(margin.value - selectedMargin) < 0.001;
                     const rowClass = isSelected ? 'highlight' : '';
@@ -601,7 +601,7 @@
                         <tr class="${rowClass}">
                             <td>${margin.label}</td>
                             <td>${formatCurrency(finalPrice)}</td>
-                            <td>${formatCurrency(grossProfit)}</td>
+                            <td>${formatCurrency(netProfit)}</td>
                             <td>${profitability.toFixed(1)}%</td>
                         </tr>
                     `;
