@@ -452,10 +452,6 @@
                                 <span class="breakdown-value" id="pBrutoPrice">$2.380</span>
                             </div>
                             <div class="breakdown-item">
-                                <span class="breakdown-label">Operación:</span>
-                                <span class="breakdown-value" id="pOperation">$2.380 ÷ 0.80</span>
-                            </div>
-                            <div class="breakdown-item">
                                 <span class="breakdown-label">Ganancia Neta:</span>
                                 <span class="breakdown-value" id="pNetProfit">$500</span>
                             </div>
@@ -643,7 +639,6 @@
             const pIvaLabelElement = document.getElementById('pIvaLabel');
             const pIvaAmountElement = document.getElementById('pIvaAmount');
             const pBrutoPriceElement = document.getElementById('pBrutoPrice');
-            const pOperationElement = document.getElementById('pOperation');
             const pNetProfitElement = document.getElementById('pNetProfit');
             const pMarkupElement = document.getElementById('pMarkup');
             const pMarginsTableBody = document.getElementById('pMarginsTableBody');
@@ -686,7 +681,6 @@
                 pIvaLabelElement.textContent = 'IVA (' + formatRate(ivaRate) + '%):';
                 pIvaAmountElement.textContent = formatCurrency(ivaAmount);
                 pBrutoPriceElement.textContent = formatCurrency(priceWithVAT);
-                pOperationElement.textContent = formatCurrency(priceWithVAT) + ' ÷ ' + divisor.toFixed(2);
                 pNetProfitElement.textContent = formatCurrency(netProfit);
                 pMarkupElement.textContent = markup.toFixed(1) + '%';
 
