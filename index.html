@@ -271,7 +271,7 @@
                         </select>
                         <div id="ivaManualGroup" style="display: none;">
                             <label for="ivaManual">IVA manual (%)</label>
-                            <input type="number" id="ivaManual" placeholder="Ej: 19" value="19" min="0" max="35" step="0.1">
+                            <input type="number" id="ivaManual" placeholder="Ej: 19" value="19" min="0" step="0.1">
                         </div>
                     </div>
 
@@ -361,13 +361,12 @@
             const profitabilityElement = document.getElementById('profitability');
             const marginsTableBody = document.getElementById('marginsTableBody');
 
-            // IVA vigente: el elegido en la lista, o el manual (0-35%)
+            // IVA vigente: el elegido en la lista, o el manual que escribas (sin tope)
             function getIvaRate() {
                 if (ivaSelect.value === 'manual') {
                     let rate = parseFloat(ivaManualInput.value);
                     if (isNaN(rate)) rate = 0;
                     if (rate < 0) rate = 0;
-                    if (rate > 35) rate = 35;
                     return rate;
                 }
                 return parseFloat(ivaSelect.value);
